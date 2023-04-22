@@ -4,7 +4,7 @@ import java.awt.*;
 
 public class Tile {
     // Значение плитки
-    private int value;
+    public int value;
 
     public Tile(int value) { this.value = value; }
     public Tile() { this.value = 0; }
