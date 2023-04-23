@@ -43,6 +43,9 @@ public class Controller extends KeyAdapter { // Наследуемся от KeyA
                 case KeyEvent.VK_LEFT -> model.left();
                 case KeyEvent.VK_UP -> model.up();
                 case KeyEvent.VK_DOWN -> model.down();
+                case KeyEvent.VK_Z -> model.rollback();
+                case KeyEvent.VK_R -> model.randomMove();
+                case KeyEvent.VK_A -> model.autoMove();
             }
         }
         // Проверяем если максимальная плитка равна 2048, если равна выставляем флаг победителя

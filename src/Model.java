@@ -1,8 +1,8 @@
+import move.Move;
+import move.MoveEfficiency;
 import tile.Tile;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 public class Model {
     // Ширина поля
@@ -11,8 +11,14 @@ public class Model {
     private Tile[][] gameTiles;
     // Текущий счет в игру
     protected int score;
+    // Флаг, что можно сохранять состояние игры
+    private boolean isSaveNeeded = true;
     // Значение максимальной плитки
     protected int maxTile;
+    // ArrayDeque для сохранения состояния игры
+    private ArrayDeque<Tile[][]> previousStates = new ArrayDeque<>();
+    // Для сохранения счета
+    private ArrayDeque<Integer> previousScores = new ArrayDeque<>();
 
     public Model() {
         resetGame();
@@ -121,19 +127,20 @@ public class Model {
     // Метод движения вправо
     public void left() {
         boolean flag = false; // флаг для проверки смогли ли мы сходить направо
-
+        if (isSaveNeeded) { saveState(gameTiles); } // Если можно сохранить, сохраняем
         for (int i = 0; i < FIELD_WIDTH; i++) { // проходимся по константной длине массива
             if (compressTiles(gameTiles[i]) || mergeTiles(gameTiles[i])) { // проверяем можем ли мы сделать одно из действий, сначала идет проверки слияния, а потом уже компресса
                 flag = true; // Если смогли выставляем флаг
             }
         }
-
         if (flag) { // проверка флага
             addTile(); // добавление одной новой плитки
         }
+        isSaveNeeded = true;
     }
     // Метод движения налево
     public void right() {
+        saveState(gameTiles);
         gameTiles = rotateClockwise(gameTiles);
         gameTiles = rotateClockwise(gameTiles);
         left();
@@ -142,6 +149,7 @@ public class Model {
     }
     // Метод движения вверх
     public void up() {
+        saveState(gameTiles);
         gameTiles = rotateClockwise(gameTiles);
         gameTiles = rotateClockwise(gameTiles);
         gameTiles = rotateClockwise(gameTiles);
@@ -150,6 +158,7 @@ public class Model {
     }
     // Метод движения вниз
     public void down() {
+        saveState(gameTiles);
         gameTiles = rotateClockwise(gameTiles);
         left();
         gameTiles = rotateClockwise(gameTiles);
@@ -176,6 +185,70 @@ public class Model {
             }
         }
         return false; // иначе проиграл
+    }
+    // Метод сохранения игры
+    public void saveState(Tile[][] tiles) {
+        Tile[][] saveTiles = new Tile[FIELD_WIDTH] [FIELD_WIDTH]; // Создаем новый массив
+
+        for (int i = 0; i < tiles.length; i++) { // Проходимся по переданному массиву
+            for (int j = 0; j < tiles[i].length; j++) {
+                saveTiles[i][j] = new Tile(tiles[i][j].value); // передаем значение плитки в новый массив, сохраняем состояние
+            }
+        }
+        previousStates.push(saveTiles);
+        previousScores.push(score);
+        isSaveNeeded = false; // Выставляем флаг, что сохранять состояние не надо
+    }
+    // Метод возврата хода назад
+    public void rollback() {
+        // Проверяем ArrayDeque не пустые
+        if (!previousScores.isEmpty() && !previousStates.isEmpty()) {
+            // возвращаем поле и счет в состояние назад
+            gameTiles = previousStates.pop();
+            score = previousScores.pop();
+        }
+    }
+    // Метод случайного хода
+    public void randomMove() {
+        int randomMove = (int) (Math.random() * 100) % 4; // получаем случайное число от 0 до 4
+        switch (randomMove) { // Делаем ход в зависимости от случайного числа
+            case 0 -> left();
+            case 1 -> right();
+            case 2 -> up();
+            case 3 -> down();
+        }
+    }
+    // Метод проверки изменилось ли поле
+    public boolean hasBoardChanged() {
+        for (int i = 0; i < FIELD_WIDTH; i++) {
+            for (int j = 0; j < FIELD_WIDTH; j++) {
+                if (gameTiles[i][j].value != previousStates.peek()[i][j].value) {
+                    return true;
+                }
+            }
+
+        }
+        return false;
+    }
+    // Получаем эффективный ход
+    public MoveEfficiency getMoveEfficiency(Move move) {
+        MoveEfficiency moveEfficiency = new MoveEfficiency(-1, 0, move);
+        move.move();
+        if (hasBoardChanged()) {
+            moveEfficiency = new MoveEfficiency(getEmptyTiles().size(), score, move);
+        }
+        rollback();
+        return moveEfficiency;
+    }
+    // Метод умного хода
+    public void autoMove() {
+        PriorityQueue<MoveEfficiency> priorityQueue = new PriorityQueue<>(4, Collections.reverseOrder());
+        priorityQueue.offer(getMoveEfficiency(this::left));
+        priorityQueue.offer(getMoveEfficiency(this::right));
+        priorityQueue.offer(getMoveEfficiency(this::up));
+        priorityQueue.offer(getMoveEfficiency(this::down));
+
+        priorityQueue.peek().getMove().move();
     }
 
 
