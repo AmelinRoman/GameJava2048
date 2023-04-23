@@ -66,11 +66,14 @@ public class Model {
         boolean result = false; // изначально флаг ложный
 
         for (int i = 0; i < FIELD_WIDTH; i++) { // Проходимся по массиву
-            if (!tiles[i].isEmpty() && i != insertPosition) { // проверяем что данная ячейка не пуста и что индекс плитки не совпадает с номером для вставления плитку
-                tiles[insertPosition] = tiles[i]; // Смещаем плиты на заданную позицию insertPosition
-                tiles[i] = new Tile(); // На старом месте создаем плитку с 0 значением
-                result = true; // выставляем флаг что можем сместить плиты
-                insertPosition++; // увеличиваем позицию для вставки плитки
+            if (!tiles[i].isEmpty()) {
+                if (i != insertPosition) { // проверяем что данная ячейка не пуста и что индекс плитки не совпадает с номером для вставления плитку
+                    tiles[insertPosition] = tiles[i]; // Смещаем плиты на заданную позицию insertPosition
+                    tiles[i] = new Tile(); // На старом месте создаем плитку с 0 значением
+                    result = true; // выставляем флаг что можем сместить плиты
+                     // увеличиваем позицию для вставки плитки
+                }
+                insertPosition++;
             }
         }
         return result; // возвращаем значение флага, смогли ли сместить плиты
@@ -116,11 +119,11 @@ public class Model {
         return resultTiles; // Возвращаем результат поворота
     }
     // Метод движения вправо
-    public void right() {
+    public void left() {
         boolean flag = false; // флаг для проверки смогли ли мы сходить направо
 
         for (int i = 0; i < FIELD_WIDTH; i++) { // проходимся по константной длине массива
-            if (mergeTiles(gameTiles[i]) || compressTiles(gameTiles[i])) { // проверяем можем ли мы сделать одно из действий, сначала идет проверки слияния, а потом уже компресса
+            if (compressTiles(gameTiles[i]) || mergeTiles(gameTiles[i])) { // проверяем можем ли мы сделать одно из действий, сначала идет проверки слияния, а потом уже компресса
                 flag = true; // Если смогли выставляем флаг
             }
         }
@@ -130,10 +133,10 @@ public class Model {
         }
     }
     // Метод движения налево
-    public void left() {
+    public void right() {
         gameTiles = rotateClockwise(gameTiles);
         gameTiles = rotateClockwise(gameTiles);
-        right();
+        left();
         gameTiles = rotateClockwise(gameTiles);
         gameTiles = rotateClockwise(gameTiles);
     }
@@ -142,13 +145,13 @@ public class Model {
         gameTiles = rotateClockwise(gameTiles);
         gameTiles = rotateClockwise(gameTiles);
         gameTiles = rotateClockwise(gameTiles);
-        right();
+        left();
         gameTiles = rotateClockwise(gameTiles);
     }
     // Метод движения вниз
     public void down() {
         gameTiles = rotateClockwise(gameTiles);
-        right();
+        left();
         gameTiles = rotateClockwise(gameTiles);
         gameTiles = rotateClockwise(gameTiles);
         gameTiles = rotateClockwise(gameTiles);
